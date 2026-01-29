@@ -345,6 +345,7 @@ func TestFileWriter_DirectoryNotExists(t *testing.T) {
 
 	nonExistentDir := filepath.Join(tmpDir, "nonexistent", "subdir", "test.log")
 	fw := NewFileWriter(nonExistentDir, 0)
+	defer fw.Close()
 
 	testData := []byte("test data\n")
 	_, err = fw.Write(testData)
