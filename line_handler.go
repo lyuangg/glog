@@ -2,7 +2,6 @@ package glog
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -86,14 +85,21 @@ func (h *LineHandler) Handle(_ context.Context, r slog.Record) error {
 		return true
 	})
 
-	var contextJSON string
+	var attrsStr string
 	if len(fields) > 0 {
-		if b, err := json.Marshal(fields); err == nil {
-			contextJSON = " " + string(b)
+		var buf strings.Builder
+		for k, v := range fields {
+			if buf.Len() > 0 {
+				buf.WriteByte(' ')
+			}
+			buf.WriteString(k)
+			buf.WriteByte('=')
+			fmt.Fprint(&buf, v)
 		}
+		attrsStr = " " + buf.String()
 	}
 
-	line := fmt.Sprintf("[%s] %s: %s%s\n", timeStr, levelStr, r.Message, contextJSON)
+	line := fmt.Sprintf("[%s] %s: %s%s\n", timeStr, levelStr, r.Message, attrsStr)
 
 	h.mu.Lock()
 	defer h.mu.Unlock()

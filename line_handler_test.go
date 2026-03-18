@@ -21,7 +21,7 @@ func TestLineHandler_BasicFormat(t *testing.T) {
 	if !strings.Contains(out, "] INFO: user login") {
 		t.Fatalf("unexpected output: %s", out)
 	}
-	if !strings.Contains(out, `"user_id":"123"`) {
+	if !strings.Contains(out, `user_id=123`) {
 		t.Fatalf("expected user_id field in output, got: %s", out)
 	}
 }
@@ -92,11 +92,11 @@ func TestLineHandler_WithAttrsAndWithGroup(t *testing.T) {
 	out := strings.TrimSpace(buf.String())
 
 	// app gets http group prefix
-	if !strings.Contains(out, `"http.app":"demo"`) {
+	if !strings.Contains(out, `http.app=demo`) {
 		t.Fatalf("expected http.app field in output, got: %s", out)
 	}
 	// http group prefix for method
-	if !strings.Contains(out, `"http.method":"GET"`) {
+	if !strings.Contains(out, `http.method=GET`) {
 		t.Fatalf("expected http.method field in output, got: %s", out)
 	}
 }
