@@ -41,7 +41,7 @@ type RecordHandler func(ctx context.Context, r *slog.Record)
 func defaultTimeReplaceAttr(groups []string, a slog.Attr) slog.Attr {
 	// only handle top-level "time"
 	if len(groups) == 0 && a.Key == slog.TimeKey {
-		return slog.String(a.Key, a.Value.Time().Format("2006-01-02 15:04:05"))
+		return slog.String(a.Key, a.Value.Time().Format("2006-01-02 15:04:05.000"))
 	}
 	return a
 }
@@ -269,7 +269,11 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 }
 
 // Close closes the Handler and releases resources.
+// It does not close os.Stdout or os.Stderr; those are process-wide standard streams.
 func (h *Handler) Close() error {
+	if h.writer == os.Stdout || h.writer == os.Stderr {
+		return nil
+	}
 	if closer, ok := h.writer.(io.Closer); ok {
 		return closer.Close()
 	}

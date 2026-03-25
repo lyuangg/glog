@@ -12,7 +12,7 @@ import (
 // LineHandler implements slog.Handler and writes single-line text logs in the form:
 // [2024-01-01 12:00:00] LEVEL: message {"key":"val",...}
 //
-// Time uses "2006-01-02 15:04:05"; level is string (INFO, ERROR, etc.); structured
+// Time uses "2006-01-02 15:04:05.000" (with milliseconds); level is string (INFO, ERROR, etc.); structured
 // fields are collected as a JSON object at the end. Supports Level, ReplaceAttr, WithAttrs, WithGroup.
 type LineHandler struct {
 	w      io.Writer
@@ -48,10 +48,7 @@ func (h *LineHandler) Handle(_ context.Context, r slog.Record) error {
 	if h.opts.ReplaceAttr != nil {
 		timeAttr = h.opts.ReplaceAttr(nil, timeAttr)
 	}
-	timeStr := r.Time.Format("2006-01-02 15:04:05")
-	if timeAttr.Value.Kind() == slog.KindString {
-		timeStr = timeAttr.Value.String()
-	}
+	timeStr := timeAttr.Value.String()
 
 	levelAttr := slog.String(slog.LevelKey, r.Level.String())
 	if h.opts.ReplaceAttr != nil {

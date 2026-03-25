@@ -136,9 +136,9 @@ func TestHandler_DefaultTimeFormat(t *testing.T) {
 	if !strings.Contains(output, `time="`) {
 		t.Error("output should contain time field")
 	}
-	timePattern := `time="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"`
+	timePattern := `time="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}"`
 	if matched, _ := regexp.MatchString(timePattern, output); !matched {
-		t.Errorf("time format should be '2006-01-02 15:04:05', got: %s", output)
+		t.Errorf("time format should be '2006-01-02 15:04:05.000', got: %s", output)
 	}
 }
 
@@ -167,9 +167,9 @@ func TestHandler_CustomReplaceAttrWithDefaultTimeFormat(t *testing.T) {
 	logger.Info("test custom replace attr")
 
 	output := buf.String()
-	timePattern := `time="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"`
+	timePattern := `time="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}"`
 	if matched, _ := regexp.MatchString(timePattern, output); !matched {
-		t.Errorf("time format should still be '2006-01-02 15:04:05', got: %s", output)
+		t.Errorf("time format should still be '2006-01-02 15:04:05.000', got: %s", output)
 	}
 	if !strings.Contains(output, "level=") {
 		t.Error("output should contain level field")
@@ -675,7 +675,7 @@ func TestHandler_TraceExtractorReturnsNil(t *testing.T) {
 	}
 }
 
-func TestHandler_FormatLine_Output(t *testing.T) {
+func TestHandler_LineFormat(t *testing.T) {
 	var buf bytes.Buffer
 	opts := &Options{
 		Writer: &buf,
@@ -695,9 +695,9 @@ func TestHandler_FormatLine_Output(t *testing.T) {
 	if !strings.Contains(output, "line format test") {
 		t.Error("Line format should contain message")
 	}
-	timePattern := `\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}`
+	timePattern := `\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}`
 	if matched, _ := regexp.MatchString(timePattern, output); !matched {
-		t.Errorf("Line format should contain time like 2006-01-02 15:04:05, got: %s", output)
+		t.Errorf("Line format should contain time like 2006-01-02 15:04:05.000, got: %s", output)
 	}
 }
 
@@ -708,5 +708,23 @@ func TestHandler_Close_NonCloserWriter(t *testing.T) {
 	// bytes.Buffer is not io.Closer, Close should return nil
 	if err := handler.Close(); err != nil {
 		t.Errorf("Close with non-Closer writer should return nil, got %v", err)
+	}
+}
+
+func TestHandler_Close_SkipsStdStreams(t *testing.T) {
+	h := NewHandler(nil)
+	if err := h.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if _, err := os.Stdout.Write(nil); err != nil {
+		t.Fatalf("stdout should remain open after Handler.Close: %v", err)
+	}
+
+	h2 := NewHandler(&Options{Writer: os.Stderr})
+	if err := h2.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if _, err := os.Stderr.Write(nil); err != nil {
+		t.Fatalf("stderr should remain open after Handler.Close: %v", err)
 	}
 }
